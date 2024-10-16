@@ -68,6 +68,8 @@ public abstract class EntityRenderMixin<E extends LivingEntity, T extends Living
 			Armature armature = entitypatch.getArmature();
 			poseStack.pushPose();
 			((PatchedLivingEntityRenderer) (Object) this).mulPoseStack(poseStack, armature, entity, entitypatch, partialTicks);
+
+			this.invokePrepareVanillaModel(entity, renderer.getModel(), renderer, partialTicks);
 			
 			OpenMatrix4f[] poseMatrices = ((PatchedLivingEntityRenderer) (Object) this).getPoseMatrices(entitypatch, armature, partialTicks, false);
 //			AnimatedMesh mesh = BedrockModelTransformer.bakeMeshFromCubes(boxes);
@@ -92,6 +94,8 @@ public abstract class EntityRenderMixin<E extends LivingEntity, T extends Living
 	        if (humanoidModel.needRefresh(pojo))
 	        	humanoidModel.loadModel(pojo);
 
+	        
+	        
 			List<BedrockModelPartition> boxes = Lists.newArrayList();
 
 			// Remove entity animation
@@ -119,7 +123,7 @@ public abstract class EntityRenderMixin<E extends LivingEntity, T extends Living
 			AnimatedMesh mesh = BedrockModelTransformer.bakeMeshFromCubes(boxes);
 	        
 			if (mesh != null) {
-
+				mesh.initialize();
 				mesh.draw(poseStack, buffer,
 						RenderType.entityTranslucent(
 								ClientUtils.getTexture(renderTarget), true),
@@ -155,6 +159,9 @@ public abstract class EntityRenderMixin<E extends LivingEntity, T extends Living
 	protected int getOverlayCoord(E entity, T entitypatch, float partialTicks) {
 		return OverlayTexture.pack(0, OverlayTexture.v(entity.hurtTime > 5));
 	}
+	
+	@Invoker(value = "prepareVanillaModel", remap = false)
+	public abstract void invokePrepareVanillaModel(E entity, M model, LivingEntityRenderer<E, M> renderer, float partialTicks);
 
 	@Invoker(value = "renderLayer", remap = false)
 	public abstract void invokeRenderLayer(LivingEntityRenderer<E, M> renderer, T entitypatch, E entity, OpenMatrix4f[] poses, MultiBufferSource buffer, PoseStack poseStack, int packedLight, float partialTicks);

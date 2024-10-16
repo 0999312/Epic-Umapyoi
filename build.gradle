@@ -151,7 +151,7 @@ dependencies {
     // Apply Mixin AP
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    implementation fg.deobf("cn.mcmod_mmf.mysterious_mountain_lib:MMLib:1.4.12-1.20.1")
+    implementation fg.deobf("cn.mcmod_mmf.mysterious_mountain_lib:MMLib:1.4.13-1.20.1")
     // Compile against only the API artifact
     compileOnly(fg.deobf("top.theillusivec4.curios:curios-forge:5.4.5+1.20.1:api"))
     // Use the full Curios API jar at runtime
@@ -165,7 +165,7 @@ dependencies {
     // at runtime, use the full JEI jar for Forge
     runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
     
-    implementation fg.deobf("maven.modrinth:epic-fight:20.9.2")
+    implementation fg.deobf("maven.modrinth:epic-fight:20.9.4")
     implementation fg.deobf("net.tracen:umapyoi:1.5.33-1.20.1")
 }
 

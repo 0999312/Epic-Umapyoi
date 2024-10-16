@@ -14,23 +14,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import cn.mcmod_mmf.mmlib.client.model.BedrockHumanoidModel;
 import cn.mcmod_mmf.mmlib.client.model.bedrock.BedrockCube;
 import cn.mcmod_mmf.mmlib.client.model.bedrock.BedrockPart;
 import cn.mcmod_mmf.mmlib.client.model.bedrock.BedrockPolygon;
 import cn.mcmod_mmf.mmlib.client.model.bedrock.BedrockVertex;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.PartPose;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,86 +32,31 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.tracen.epicumapyoi.mixin.client.PartTransformerInvoker;
 import yesman.epicfight.api.client.model.AnimatedMesh;
 import yesman.epicfight.api.client.model.MeshPartDefinition;
-import yesman.epicfight.api.client.model.Meshes;
 import yesman.epicfight.api.client.model.SingleGroupVertexBuilder;
 import yesman.epicfight.api.client.model.transformer.HumanoidModelTransformer;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.api.utils.math.QuaternionUtils;
 import yesman.epicfight.api.utils.math.Vec2f;
 import yesman.epicfight.api.utils.math.Vec3f;
-import yesman.epicfight.client.ClientEngine;
-import yesman.epicfight.client.mesh.HumanoidMesh;
 
 @OnlyIn(Dist.CLIENT)
 public class BedrockModelTransformer extends HumanoidModelTransformer {
 	public static final PartTransformer<BedrockCube> HEAD = new SimpleTransformer(9);
 	public static final PartTransformer<BedrockCube> LEFT_FEET = new SimpleTransformer(5);
 	public static final PartTransformer<BedrockCube> RIGHT_FEET = new SimpleTransformer(2);
-	public static final PartTransformer<BedrockCube> LEFT_ARM = new LimbPartTransformer(16, 17, 19, 19.0F, false, AABB.ofSize(new Vec3(-6.0D, 18.0D, 0), 8.0D, 14.0D, 8.0D));
-	public static final PartTransformer<BedrockCube> RIGHT_ARM = new LimbPartTransformer(11, 12, 14, 19.0F, false, AABB.ofSize(new Vec3(6.0D, 18.0D, 0), 8.0D, 14.0D, 8.0D));
-	public static final PartTransformer<BedrockCube> LEFT_LEG = new LimbPartTransformer(4, 5, 6, 6.0F, true, AABB.ofSize(new Vec3(-2.0D, 6.0D, 0), 8.0D, 14.0D, 8.0D));
-	public static final PartTransformer<BedrockCube> RIGHT_LEG = new LimbPartTransformer(1, 2, 3, 6.0F, true, AABB.ofSize(new Vec3(2.0D, 6.0D, 0), 8.0D, 14.0D, 8.0D));
-	public static final PartTransformer<BedrockCube> CHEST = new ChestPartTransformer(8, 7, 18.0F, AABB.ofSize(new Vec3(0, 18.0D, 0), 12.0D, 14.0D, 6.0D));
+	public static final PartTransformer<BedrockCube> LEFT_ARM = new LimbPartTransformer(16, 17, 19, 1.125F, false, AABB.ofSize(new Vec3(-0.375D, 1.125D, 0), 0.5D, 0.85D, 0.5D));
+	public static final PartTransformer<BedrockCube> RIGHT_ARM = new LimbPartTransformer(11, 12, 14, 1.125F, false, AABB.ofSize(new Vec3(0.375D, 1.125D, 0), 0.5D, 0.85D, 0.5D));
+	public static final PartTransformer<BedrockCube> LEFT_LEG = new LimbPartTransformer(4, 5, 6, 0.375F, true, AABB.ofSize(new Vec3(-0.15D, 0.375D, 0), 0.5D, 0.85D, 0.5D));
+	public static final PartTransformer<BedrockCube> RIGHT_LEG = new LimbPartTransformer(1, 2, 3, 0.375F, true, AABB.ofSize(new Vec3(0.15D, 0.375D, 0), 0.5D, 0.85D, 0.5D));
+	public static final PartTransformer<BedrockCube> CHEST = new ChestPartTransformer(8, 7, 1.125F, AABB.ofSize(new Vec3(0, 1.125D, 0), 0.9D, 0.85D, 0.45D));
 	
 	@OnlyIn(Dist.CLIENT)
 	public static record BedrockModelPartition(PartTransformer<BedrockCube> partTransformer, BedrockPart modelPart, String partName) {
 	}
 	
 	@Override
-	public AnimatedMesh transformArmorModel(ResourceLocation modelLocation, LivingEntity entityLiving, ItemStack itemstack, ArmorItem armorItem, EquipmentSlot slot, HumanoidModel<?> originalModel, Model forgeModel, HumanoidModel<?> entityModel, HumanoidMesh entityMesh) {
-		if (forgeModel == originalModel || !(forgeModel instanceof BedrockHumanoidModel humanoidModel)) {
-			return entityMesh.getHumanoidArmorModel(slot);
-		}
-		
-		if (!ClientEngine.getInstance().isVanillaModelDebuggingMode()) {
-			humanoidModel.setAllVisible(false);
-			
-			switch (slot) {
-			case HEAD -> {
-				humanoidModel.head.visible = true;
-				humanoidModel.hat.visible = true;
-			}
-			case CHEST -> {
-				humanoidModel.body.visible = true;
-				humanoidModel.rightArm.visible = true;
-				humanoidModel.leftArm.visible = true;
-			}
-			case LEGS -> {
-				humanoidModel.body.visible = true;
-				humanoidModel.rightLeg.visible = true;
-				humanoidModel.leftLeg.visible = true;
-			}
-			case FEET -> {
-				humanoidModel.rightLeg.visible = true;
-				humanoidModel.leftLeg.visible = true;
-			}
-			default -> {}
-			}
-		}
-		
-		List<BedrockModelPartition> boxes = Lists.newArrayList();
-		
-		//Remove entity animation
-		humanoidModel.head.loadPose(humanoidModel.head.getInitialPose());
-		humanoidModel.hat.loadPose(humanoidModel.hat.getInitialPose());
-		humanoidModel.body.loadPose(humanoidModel.body.getInitialPose());
-		humanoidModel.leftArm.loadPose(humanoidModel.leftArm.getInitialPose());
-		humanoidModel.rightArm.loadPose(humanoidModel.rightArm.getInitialPose());
-		humanoidModel.leftLeg.loadPose(humanoidModel.leftLeg.getInitialPose());
-		humanoidModel.rightLeg.loadPose(humanoidModel.rightLeg.getInitialPose());
-		
-		boxes.add(new BedrockModelPartition(HEAD, humanoidModel.head, "head"));
-		boxes.add(new BedrockModelPartition(HEAD, humanoidModel.hat, "hat"));
-		boxes.add(new BedrockModelPartition(CHEST, humanoidModel.body, "body"));
-		boxes.add(new BedrockModelPartition(RIGHT_ARM, humanoidModel.rightArm, "rightArm"));
-		boxes.add(new BedrockModelPartition(LEFT_ARM, humanoidModel.leftArm, "leftArm"));
-		boxes.add(new BedrockModelPartition(LEFT_LEG, humanoidModel.leftLeg, "leftLeg"));
-		boxes.add(new BedrockModelPartition(RIGHT_LEG, humanoidModel.rightLeg, "rightLeg"));
-		
-		AnimatedMesh mesh = bakeMeshFromCubes(boxes);
-		Meshes.addMesh(modelLocation, mesh);
-		
-		return mesh;
+	public AnimatedMesh transformArmorModel(ResourceLocation modelLocation, HumanoidModel<?> model) {
+		return null;
 	}
 	
 	public static AnimatedMesh bakeMeshFromCubes(List<BedrockModelPartition> partitions) {
@@ -155,19 +94,22 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 		}
 		
 		if (part.visible) {
-			MeshPartDefinition partDefinition = BedrockPartDefinition.of(partName);
-			
-			if (bindPart) {
-				OpenMatrix4f invertedParentTransform = OpenMatrix4f.importFromMojangMatrix(poseStack.last().pose());
-				invertedParentTransform.m30 *= 0.0625F;
-				invertedParentTransform.m31 *= 0.0625F;
-				invertedParentTransform.m32 *= 0.0625F;
-				invertedParentTransform.invert();
-				partDefinition = BedrockPartDefinition.of(partName, newList, invertedParentTransform, modelpartition.modelPart);
-			}
-			
 			for (BedrockCube cube : part.getCubes()) {
+				poseStack.pushPose();
+				MeshPartDefinition partDefinition = BedrockPartDefinition.of(partName);
+				
+				if (bindPart) {
+					OpenMatrix4f invertedParentTransform = OpenMatrix4f.importFromMojangMatrix(poseStack.last().pose());
+					invertedParentTransform.m30 *= 0.0625F;
+					invertedParentTransform.m31 *= 0.0625F;
+					invertedParentTransform.m32 *= 0.0625F;
+					invertedParentTransform.invert();
+					partDefinition = BedrockPartDefinition.of(partName, newList, invertedParentTransform, modelpartition.modelPart);
+				}
+			
+			
 				modelpartition.partTransformer.bakeCube(poseStack, partDefinition, cube, vertices, indices, indexCounter);
+				poseStack.popPose();
 			}
 		}
 		
@@ -188,14 +130,14 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 		@Override
 		public void bakeCube(PoseStack poseStack, MeshPartDefinition partDefinition, BedrockCube cube, List<SingleGroupVertexBuilder> vertices, Map<MeshPartDefinition, IntList> indices, IndexCounter indexCounter) {
 			for (BedrockPolygon quad : cube.getPolygons()) {
-				Vector3f norm = new Vector3f(quad.normal);
+				Vector3f norm = new Vector3f(quad.getNormalCopy());
 				norm.mul(poseStack.last().normal());
 				
 				for (BedrockVertex vertex : quad.vertices) {
 					Vector4f pos = new Vector4f(vertex.pos, 1.0F);
 					pos.mul(poseStack.last().pose());
 					vertices.add(new SingleGroupVertexBuilder()
-						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625F))
+						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625f))
 						.setNormal(new Vec3f(norm.x(), norm.y(), norm.z()))
 						.setTextureCoordinate(new Vec2f(vertex.u, vertex.v))
 						.setEffectiveJointIDs(new Vec3f(this.jointId, 0, 0))
@@ -251,7 +193,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				BedrockVertex pos1 = getTranslatedVertex(polygon.vertices[1], matrix);
 				BedrockVertex pos2 = getTranslatedVertex(polygon.vertices[2], matrix);
 				BedrockVertex pos3 = getTranslatedVertex(polygon.vertices[3], matrix);
-				Direction direction = getDirectionFromVector(polygon.normal);
+				Direction direction = getDirectionFromVector(polygon.getNormalCopy());
 				
 				VertexWeight pos0Weight = getYClipWeight(pos0.pos.y());
 				VertexWeight pos1Weight = getYClipWeight(pos1.pos.y());
@@ -347,7 +289,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 					}
 					
 					vertices.add(new SingleGroupVertexBuilder()
-						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625F))
+						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625f))
 						.setNormal(new Vec3f(norm.x(), norm.y(), norm.z()))
 						.setTextureCoordinate(new Vec2f(vertex.u, vertex.v))
 						.setEffectiveJointIDs(new Vec3f(joint1, joint2, 0))
@@ -426,7 +368,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 		@Override
 		public void bakeCube(PoseStack poseStack, MeshPartDefinition partDefinition,  BedrockCube cube, List<SingleGroupVertexBuilder> vertices, Map<MeshPartDefinition, IntList> indices, PartTransformer.IndexCounter indexCounter) {
 			Vec3 centerOfCube = getCenterOfCube(poseStack, cube);
-						
+			
 			if (!this.noneAttachmentArea.contains(centerOfCube)) {
 				if (centerOfCube.y < this.yClipCoord) {
 					this.lowerAttachmentTransformer.bakeCube(poseStack, partDefinition, cube, vertices, indices, indexCounter);
@@ -436,6 +378,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				
 				return;
 			}
+			
 			List<AnimatedPolygon> polygons = Lists.<AnimatedPolygon>newArrayList();
 			
 			for (BedrockPolygon quad : cube.getPolygons()) {
@@ -444,7 +387,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				BedrockVertex pos1 = getTranslatedVertex(quad.vertices[1], matrix);
 				BedrockVertex pos2 = getTranslatedVertex(quad.vertices[2], matrix);
 				BedrockVertex pos3 = getTranslatedVertex(quad.vertices[3], matrix);
-				Direction direction = getDirectionFromVector(quad.normal);
+				Direction direction = getDirectionFromVector(quad.getNormalCopy());
 				
 				if (pos1.pos.y() > this.yClipCoord != pos2.pos.y() > this.yClipCoord) {
 					float distance = pos2.pos.y() - pos1.pos.y();
@@ -518,7 +461,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				for (AnimatedVertex vertex : quad.animatedVertexPositions) {
 					Vector4f pos = new Vector4f(vertex.pos, 1.0F);
 					vertices.add(new SingleGroupVertexBuilder()
-						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625F))
+						.setPosition(new Vec3f(pos.x(), pos.y(), pos.z()).scale(0.0625f))
 						.setNormal(new Vec3f(norm.x(), norm.y(), norm.z()))
 						.setTextureCoordinate(new Vec2f(vertex.u, vertex.v))
 						.setEffectiveJointIDs(new Vec3f(vertex.jointId.getX(), 0, 0))
@@ -600,7 +543,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 	
 	static BedrockVertex getTranslatedVertex(BedrockVertex original, Matrix4f matrix) {
 		Vector4f translatedPosition = new Vector4f(original.pos, 1.0F);
-		translatedPosition.mul(matrix);
+//		translatedPosition.mul(matrix);
 		
 		return new BedrockVertex(translatedPosition.x(), translatedPosition.y(), translatedPosition.z(), original.u, original.v);
 	}
@@ -672,11 +615,10 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				
 				for (String childPartName : this.path) {
 					part = part.getChild(childPartName);
-					if (part == null) {
+					if(part == null)
 						return null;
-					}
-					
 					idx++;
+					
 					this.progress(part, poseStack, idx == this.path.size());
 				}
 				
@@ -689,7 +631,7 @@ public class BedrockModelTransformer extends HumanoidModelTransformer {
 				PartPose partPose = part.getInitialPose();
 				OpenMatrix4f partAnimation = OpenMatrix4f.mulMatrices(animParentTransform,
 																	  new OpenMatrix4f().mulBack(OpenMatrix4f.fromQuaternion(new Quaternionf().rotationZYX(partPose.zRot, partPose.yRot, partPose.xRot)).transpose().invert())
-																						.translate(new Vec3f(lastPart.x - partPose.x, lastPart.y - partPose.y, lastPart.z - partPose.z).scale(0.0625F))
+																						.translate(new Vec3f(lastPart.x - partPose.x, lastPart.y - partPose.y, lastPart.z - partPose.z).scale(0.0625f))
 																						.mulBack(OpenMatrix4f.fromQuaternion(new Quaternionf().rotationZYX(partPose.zRot, partPose.yRot, partPose.xRot)).transpose())
 																						.mulBack(OpenMatrix4f.fromQuaternion(new Quaternionf().rotationZYX(lastPart.zRot - partPose.zRot, lastPart.yRot - partPose.yRot, lastPart.xRot - partPose.xRot)).transpose())
 																						.scale(new Vec3f(lastPart.xScale, lastPart.yScale, lastPart.zScale)),
